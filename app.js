@@ -1,5 +1,5 @@
 // v61 - 61 tools
-// ===== PRICING DATA (as of mid-2025) =====
+// ===== PRICING DATA (as of June 2026) =====
 const TOOLS = {
   claudeCode: { name: "Claude Code", icon: "🤖", subPlans: [{ name: "Pro", price: 20 }, { name: "Max 5x", price: 100 }, { name: "Max 20x", price: 200 }] },
   cursor: { name: "Cursor", icon: "📝", subPlans: [{ name: "Free", price: 0 }, { name: "Pro", price: 20 }, { name: "Business", price: 40 }] },
@@ -89,13 +89,14 @@ const AI_SUBS = [
 
 // API pricing per million tokens (input/output)
 const API_PRICING = {
-  claude_sonnet: { name: "Claude Sonnet 4", in: 3, out: 15 },
-  claude_haiku: { name: "Claude Haiku 3.5", in: 0.8, out: 4 },
+  claude_sonnet: { name: "Claude Sonnet 4.5", in: 3, out: 15 },
+  claude_haiku: { name: "Claude Haiku 4", in: 0.8, out: 4 },
+  gpt5: { name: "GPT-5", in: 5, out: 15 },
   gpt4o: { name: "GPT-4o", in: 2.5, out: 10 },
   gpt4o_mini: { name: "GPT-4o mini", in: 0.15, out: 0.6 },
-  deepseek: { name: "DeepSeek V3", in: 0.27, out: 1.1 },
-  gemini_pro: { name: "Gemini 2.0 Pro", in: 1.25, out: 5 },
-  llama: { name: "Llama 3.3 70B", in: 0.23, out: 0.4 },
+  deepseek: { name: "DeepSeek V4", in: 0.27, out: 1.1 },
+  gemini_pro: { name: "Gemini 2.5 Pro", in: 1.25, out: 10 },
+  llama: { name: "Llama 4 Scout", in: 0.23, out: 0.4 },
 };
 
 // ===== TAB SWITCHING =====
@@ -133,7 +134,7 @@ function calcCompare() {
     { key: 'cursor', plan: 'Pro', subPrice: 20, apiModel: 'claude_sonnet', desc: 'IDE with AI, fast autocomplete' },
     { key: 'copilot', plan: 'Individual', subPrice: 10, apiModel: 'gpt4o_mini', desc: 'Inline completion + chat' },
     { key: 'windsurf', plan: 'Pro', subPrice: 15, apiModel: 'claude_sonnet', desc: 'Cascade agent, multi-file edits' },
-    { key: 'codex', plan: 'Plus', subPrice: 20, apiModel: 'gpt4o', desc: 'Cloud coding agent by OpenAI' },
+    { key: 'codex', plan: 'Plus', subPrice: 20, apiModel: 'gpt5', desc: 'Cloud coding agent by OpenAI' },
     { key: 'cline', plan: 'BYOK', subPrice: 0, apiModel: 'claude_sonnet', desc: 'Open-source, you pay API directly' },
     { key: 'supermaven', plan: 'Pro', subPrice: 10, apiModel: 'gpt4o_mini', desc: 'Ultra-fast autocomplete' },
   ];

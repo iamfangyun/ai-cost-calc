@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>AI Coding Cost Calculator | Compare Claude Code, Cursor, Copilot & More (2025)</title>
+<title>AI Coding Cost Calculator | Compare Claude Code, Cursor, Copilot & More (2026)</title>
 <meta name="description" content="Free AI coding tool cost calculator. Compare Claude Code, Cursor, GitHub Copilot, Windsurf prices. Calculate your AI subscription stack cost. Subscription vs API break-even analysis.">
 <meta name="keywords" content="AI cost calculator, Claude Code cost, Cursor pricing, Copilot vs Claude Code, AI subscription calculator, AI coding tools comparison">
 <link rel="canonical" href="https://aicosts.bmaster.cn/ai-coding-cost-calculator.html">
@@ -13,7 +13,7 @@
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How much does Claude Code cost per month?","acceptedAnswer":{"@type":"Answer","text":"Claude Code costs $20/mo (Pro), $100/mo (Max 5x), or $200/mo (Max 20x). Actual API-equivalent costs range from $34 to $399/mo with a median of $164/mo based on usage data."}},{"@type":"Question","name":"Is Cursor cheaper than Claude Code?","acceptedAnswer":{"@type":"Answer","text":"Cursor Pro is $20/mo vs Claude Code Max at $100-200/mo. However, Cursor includes a limited amount of premium model usage. Heavy users may exceed Cursor's quota and need Claude Code's higher limits."}},{"@type":"Question","name":"Should I use API or subscription for AI coding?","acceptedAnswer":{"@type":"Answer","text":"If your monthly API cost is under $60, pay-per-use API is cheaper. Between $60-100/mo it's a close call. Above $100/mo, Claude Code Max subscription is almost always cheaper."}},{"@type":"Question","name":"How much does the average person spend on AI subscriptions?","acceptedAnswer":{"@type":"Answer","text":"Most developers subscribe to 2-4 AI tools simultaneously, spending $40-120/month. Many don't realize the total cost until they add it up."}}]}
 </script>
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 <div class="wrap">
@@ -111,13 +111,14 @@
 <div class="input-group">
 <label>Model</label>
 <select id="beModel">
-<option value="claude_sonnet" selected>Claude Sonnet 4 ($3/$15 per M tokens)</option>
-<option value="claude_haiku">Claude Haiku 3.5 ($0.8/$4 per M tokens)</option>
+<option value="claude_sonnet" selected>Claude Sonnet 4.5 ($3/$15 per M tokens)</option>
+<option value="claude_haiku">Claude Haiku 4 ($0.8/$4 per M tokens)</option>
+<option value="gpt5">GPT-5 ($5/$15 per M tokens)</option>
 <option value="gpt4o">GPT-4o ($2.5/$10 per M tokens)</option>
 <option value="gpt4o_mini">GPT-4o mini ($0.15/$0.6 per M tokens)</option>
-<option value="deepseek">DeepSeek V3 ($0.27/$1.1 per M tokens)</option>
-<option value="gemini_pro">Gemini 2.0 Pro ($1.25/$5 per M tokens)</option>
-<option value="llama">Llama 3.3 70B ($0.23/$0.4 per M tokens)</option>
+<option value="deepseek">DeepSeek V4 ($0.27/$1.1 per M tokens)</option>
+<option value="gemini_pro">Gemini 2.5 Pro ($1.25/$10 per M tokens)</option>
+<option value="llama">Llama 4 Scout ($0.23/$0.4 per M tokens)</option>
 </select>
 </div>
 </div>
@@ -147,7 +148,7 @@
 
 <p>Our calculator analyzes real-world token consumption data to estimate your monthly costs across all major AI coding tools. Based on data from <strong>claude-meter</strong> (which reverse-engineered Claude Code usage), actual monthly costs range from <strong>$34 to $399</strong>, with a median of <strong>$164/month</strong>.</p>
 
-<h3>AI Coding Tool Pricing Comparison (2025)</h3>
+<h3>AI Coding Tool Pricing Comparison (2026)</h3>
 <table>
 <tr><th>Tool</th><th>Free Tier</th><th>Paid Plans</th><th>Best For</th></tr>
 <tr><td>Claude Code</td><td>No</td><td>$20 / $100 / $200 per mo</td><td>Heavy agentic coding, complex refactors</td></tr>
@@ -173,7 +174,7 @@
 </ul>
 
 <h2>AI Subscription Fatigue Is Real</h2>
-<p>The average developer in 2025 subscribes to 3-5 AI tools simultaneously. ChatGPT Plus ($20) + Claude Pro ($20) + Cursor ($20) + Copilot ($10) = $70/month = $840/year. Add Midjourney ($10-30), Perplexity ($20), and Notion AI ($10), and you're looking at $1,500-2,000/year on AI subscriptions alone.</p>
+<p>The average developer in 2026 subscribes to 3-5 AI tools simultaneously. ChatGPT Plus ($20) + Claude Pro ($20) + Cursor ($20) + Copilot ($10) = $70/month = $840/year. Add Midjourney ($10-30), Perplexity ($20), and Notion AI ($10), and you're looking at $1,500-2,000/year on AI subscriptions alone.</p>
 
 <p>Use our <strong>Subscription Audit</strong> tab above to check everything you're subscribed to and see the real total. Most people are shocked when they see the yearly number.</p>
 
@@ -192,7 +193,7 @@
 </div>
 <div class="faq-item" onclick="toggleFAQ(this)">
 <div class="faq-q">What's the cheapest way to get AI coding help? <span class="arrow">▶</span></div>
-<div class="faq-a">For budget-conscious developers: GitHub Copilot at $10/month provides the best value for inline autocomplete. If you need agentic capabilities, use Cline + DeepSeek V3 API ($0.27/$1.10 per million tokens) — you can do serious coding for under $15/month. Free alternatives include Continue + local Llama models (requires a capable GPU).</div>
+<div class="faq-a">For budget-conscious developers: GitHub Copilot at $10/month provides the best value for inline autocomplete. If you need agentic capabilities, use Cline + DeepSeek V4 API ($0.27/$1.10 per million tokens) — you can do serious coding for under $15/month. Free alternatives include Continue + local Llama models (requires a capable GPU).</div>
 </div>
 <div class="faq-item" onclick="toggleFAQ(this)">
 <div class="faq-q">How do I track my actual Claude Code usage? <span class="arrow">▶</span></div>
@@ -202,10 +203,10 @@
 
 <div class="footer">
 <p>AI Coding Cost Calculator — Free, no sign-up, all calculations run in your browser.</p>
-<p>Data sources: Anthropic, OpenAI, Google, DeepSeek pricing pages (June 2025). Token estimates from ccusage & claude-meter community data.</p>
+<p>Data sources: Anthropic, OpenAI, Google, DeepSeek pricing pages (June 2026). Token estimates from ccusage & claude-meter community data.</p>
 <p><a href="/">AICosts</a> · <a href="/privacy.html">Privacy Policy</a></p>
 </div>
 </div>
-<script src="app.js?v=2"></script>
+<script src="app.js?v=3"></script>
 </body>
 </html>
