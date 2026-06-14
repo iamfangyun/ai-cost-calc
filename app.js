@@ -320,6 +320,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el) el.addEventListener('input', calcBreakEven);
   });
   // Initial calc
+  renderSubs();
   calcCompare();
   calcBreakEven();
 });
