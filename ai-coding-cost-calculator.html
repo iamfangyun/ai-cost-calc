@@ -18,18 +18,18 @@
 <body>
 <div class="wrap">
 <div class="header">
-<h1>AI Coding Cost Calculator</h1>
-<p>Compare AI coding tools, audit your AI subscriptions, and find the cheapest plan</p>
+<h1>AI Cost Calculator</h1>
+<p>How much are you actually spending on AI tools? Audit your subscriptions, compare coding assistants, and find your cheapest plan</p>
 </div>
 
 <div class="tabs">
-<button class="tab active" data-tab="compare" onclick="switchTab('compare')">🔧 Tool Comparison</button>
-<button class="tab" data-tab="stack" onclick="switchTab('stack')">📋 Subscription Audit</button>
+<button class="tab active" data-tab="stack" onclick="switchTab('stack')">📋 Subscription Audit</button>
+<button class="tab" data-tab="compare" onclick="switchTab('compare')">🔧 Tool Comparison</button>
 <button class="tab" data-tab="breakEven" onclick="switchTab('breakEven')">⚡ Sub vs API</button>
 </div>
 
-<!-- TAB 1: COMPARISON -->
-<div class="pane active" id="tab-compare">
+<!-- TAB: COMPARISON -->
+<div class="pane" id="tab-compare">
 <div class="card">
 <h2>🔧 Compare AI Coding Tool Costs</h2>
 <p style="color:var(--text-dim);font-size:.88rem;margin-bottom:14px">Enter your usage to see which AI coding tool is cheapest for you.</p>
@@ -61,8 +61,8 @@
 </div>
 </div>
 
-<!-- TAB 2: STACK -->
-<div class="pane" id="tab-stack">
+<!-- TAB: STACK (default first view) -->
+<div class="pane active" id="tab-stack">
 <div class="card">
 <h2>📋 AI Subscription Stack Calculator</h2>
 <p style="color:var(--text-dim);font-size:.88rem;margin-bottom:10px">Check every AI tool you currently subscribe to. See how much you're <em>actually</em> spending.</p>
