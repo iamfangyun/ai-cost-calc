@@ -1,3 +1,4 @@
+// v61 - 61 tools
 // ===== PRICING DATA (as of mid-2025) =====
 const TOOLS = {
   claudeCode: { name: "Claude Code", icon: "🤖", subPlans: [{ name: "Pro", price: 20 }, { name: "Max 5x", price: 100 }, { name: "Max 20x", price: 200 }] },
