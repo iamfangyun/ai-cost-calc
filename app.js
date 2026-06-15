@@ -102,21 +102,69 @@ function t(en, zh) { return currentLang === 'zh' ? zh : en; }
 function fmt(n) { return currentLang === 'zh' ? ('\u00a5' + (n * 7.2).toFixed(0)) : ('$' + n.toFixed(0)); }
 function fmtP(n) { return currentLang === 'zh' ? ('\u00a5' + (n * 7.2).toFixed(2)) : ('$' + n.toFixed(2)); }
 
+// ===== HASH ROUTER =====
+// Routes: #/audit  #/compare  #/api  #/zh/audit  #/zh/compare  #/zh/api
+const ROUTE_MAP = {
+  'audit': 'stack',
+  'compare': 'compare',
+  'api': 'breakEven',
+};
+const ROUTE_NAMES = { 'stack': 'audit', 'compare': 'compare', 'breakEven': 'api' };
+
+function parseHash() {
+  var hash = location.hash.replace(/^#\/?/, '');
+  var parts = hash.split('/');
+  var lang = null, tab = null;
+  parts.forEach(function(p) {
+    if (p === 'zh' || p === 'en') lang = p;
+    else if (ROUTE_MAP[p]) tab = ROUTE_MAP[p];
+  });
+  return { lang: lang, tab: tab };
+}
+
+function updateHash(lang, tab, push) {
+  var routeName = ROUTE_NAMES[tab] || 'audit';
+  var langPrefix = (lang === 'zh') ? 'zh/' : '';
+  var newHash = '#/' + langPrefix + routeName;
+  if (location.hash !== newHash) {
+    if (push) history.pushState(null, '', newHash);
+    else history.replaceState(null, '', newHash);
+  }
+}
+
+function applyRoute() {
+  var r = parseHash();
+  var newLang = r.lang || 'en';  // URL is source of truth; no prefix = English
+  var newTab = r.tab || 'stack';
+  // Apply lang if changed
+  if (newLang !== currentLang) {
+    currentLang = newLang;
+    localStorage.setItem('aic_lang', newLang);
+    document.documentElement.lang = newLang === 'zh' ? 'zh-CN' : 'en';
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    var btn = document.getElementById('lang' + newLang.charAt(0).toUpperCase() + newLang.slice(1));
+    if (btn) btn.classList.add('active');
+    applyStaticI18n();
+  }
+  // Apply tab
+  switchTabSilent(newTab);
+  // Sync URL (in case hash was partial like just #/zh)
+  updateHash(currentLang, newTab);
+}
+
 // ===== LANG SWITCH =====
 function switchLang(lang) {
   currentLang = lang;
   localStorage.setItem('aic_lang', lang);
   document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
-  // Update lang buttons
   document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-  const btn = document.getElementById('lang' + lang.charAt(0).toUpperCase() + lang.slice(1));
+  var btn = document.getElementById('lang' + lang.charAt(0).toUpperCase() + lang.slice(1));
   if (btn) btn.classList.add('active');
-  // Re-apply static text
   applyStaticI18n();
-  // Re-render dynamic
   renderSubs();
   calcCompare();
   calcBreakEven();
+  updateHash(lang, getActiveTab(), true);
 }
 
 function applyStaticI18n() {
@@ -129,16 +177,26 @@ function applyStaticI18n() {
 }
 
 // ===== TAB SWITCHING =====
-function switchTab(tabId) {
+function getActiveTab() {
+  var active = document.querySelector('.tab.active');
+  return active ? active.dataset.tab : 'stack';
+}
+
+function switchTabSilent(tabId) {
   document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
   document.querySelectorAll('.pane').forEach(p => p.classList.remove('active'));
-  const btn = document.querySelector('.tab[data-tab="' + tabId + '"]');
-  const pane = document.getElementById('tab-' + tabId);
+  var btn = document.querySelector('.tab[data-tab="' + tabId + '"]');
+  var pane = document.getElementById('tab-' + tabId);
   if (btn) btn.classList.add('active');
   if (pane) pane.classList.add('active');
   if (tabId === 'compare') calcCompare();
   if (tabId === 'stack') renderSubs();
   if (tabId === 'breakEven') calcBreakEven();
+}
+
+function switchTab(tabId) {
+  switchTabSilent(tabId);
+  updateHash(currentLang, tabId, true);
 }
 
 // ===== TAB 1: COMPARISON =====
@@ -518,7 +576,19 @@ document.addEventListener('DOMContentLoaded', function() {
     if (atv) at.addEventListener('input', function() { atv.textContent = at.value; });
   }
 
+  // Initial render of all data
   renderSubs();
   calcCompare();
   calcBreakEven();
+
+  // First visit with no hash: redirect to saved language preference
+  if (!location.hash) {
+    var savedLang = localStorage.getItem('aic_lang') || 'en';
+    var prefix = savedLang === 'zh' ? 'zh/' : '';
+    history.replaceState(null, '', '#/' + prefix + 'audit');
+  }
+  // Apply route from URL hash, then listen for hash changes
+  applyRoute();
+  window.addEventListener('hashchange', applyRoute);
+  window.addEventListener('popstate', applyRoute);
 });
