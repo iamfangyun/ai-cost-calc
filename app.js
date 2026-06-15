@@ -96,6 +96,7 @@ const API_PRICING = {
 let currentLang = localStorage.getItem('aic_lang') || 'en';
 let savedSubs = JSON.parse(localStorage.getItem('aic_subs') || '[]');
 let savedPrices = JSON.parse(localStorage.getItem('aic_prices') || '{}');
+let savedCmpPrices = JSON.parse(localStorage.getItem('aic_cmp_prices') || '{}');
 let customSubs = JSON.parse(localStorage.getItem('aic_custom') || '[]');
 
 function t(en, zh) { return currentLang === 'zh' ? zh : en; }
@@ -217,21 +218,21 @@ function calcCompare() {
   const outputTokens = totalTokens * cd.outR;
 
   const toolDefs = [
-    { key: 'claudeCode', plan: 'Max 5x', subPrice: 100, model: 'claude_sonnet', quota: Infinity,
-      dEn: 'Agentic coding, full Claude power', dZh: 'Agent编程，Claude全力' },
-    { key: 'cursor', plan: 'Pro', subPrice: 20, model: 'claude_sonnet', quota: 500000,
-      dEn: 'IDE with AI, fast autocomplete', dZh: 'AI IDE，快速补全' },
-    { key: 'copilot', plan: 'Individual', subPrice: 10, model: 'gpt4o_mini', quota: 300000,
-      dEn: 'Inline completion + chat', dZh: '行内补全 + 对话' },
-    { key: 'windsurf', plan: 'Pro', subPrice: 15, model: 'claude_sonnet', quota: 400000,
-      dEn: 'Cascade agent, multi-file edits', dZh: 'Cascade Agent，多文件编辑' },
-    { key: 'codex', plan: 'Plus', subPrice: 20, model: 'gpt5', quota: 600000,
-      dEn: 'Cloud coding agent by OpenAI', dZh: 'OpenAI 云端编程 Agent' },
-    { key: 'cline', plan: 'BYOK', subPrice: 0, model: 'claude_sonnet', quota: 0,
-      dEn: 'Open-source, you pay API directly', dZh: '开源，API 按量付费' },
-    { key: 'supermaven', plan: 'Pro', subPrice: 10, model: 'gpt4o_mini', quota: 250000,
-      dEn: 'Ultra-fast autocomplete', dZh: '超快自动补全' },
-  ];
+      { key: 'claudeCode', plan: 'Max 5x', subPrice: 100, model: 'claude_sonnet', quota: Infinity,
+        dEn: 'Agentic coding, full Claude power', dZh: 'Agent编程，Claude全力' },
+      { key: 'cursor', plan: 'Pro', subPrice: 20, model: 'claude_sonnet', quota: 500000,
+        dEn: 'IDE with AI, fast autocomplete', dZh: 'AI IDE，快速补全' },
+      { key: 'copilot', plan: 'Individual', subPrice: 10, model: 'gpt4o_mini', quota: 300000,
+        dEn: 'Inline completion + chat', dZh: '行内补全 + 对话' },
+      { key: 'windsurf', plan: 'Pro', subPrice: 15, model: 'claude_sonnet', quota: 400000,
+        dEn: 'Cascade agent, multi-file edits', dZh: 'Cascade Agent，多文件编辑' },
+      { key: 'codex', plan: 'Plus', subPrice: 20, model: 'gpt5', quota: 600000,
+        dEn: 'Cloud coding agent by OpenAI', dZh: 'OpenAI 云端编程 Agent' },
+      { key: 'cline', plan: 'BYOK', subPrice: 0, model: 'claude_sonnet', quota: 0,
+        dEn: 'Open-source, you pay API directly', dZh: '开源，API 按量付费' },
+      { key: 'supermaven', plan: 'Pro', subPrice: 10, model: 'gpt4o_mini', quota: 250000,
+        dEn: 'Ultra-fast autocomplete', dZh: '超快自动补全' },
+    ].map(function(d) { d.subPrice = savedCmpPrices[d.key] !== undefined ? savedCmpPrices[d.key] : d.subPrice; return d; });
 
   const results = toolDefs.map(r => {
     const api = API_PRICING[r.model];
@@ -262,7 +263,8 @@ function calcCompare() {
     const desc = t(r.dEn, r.dZh);
     let detailParts = [];
     if (r.subPrice > 0) {
-      detailParts.push(t('Sub', '订阅') + ': ' + fmt(r.subPrice) + '/mo');
+      var isEdited = savedCmpPrices[r.key] !== undefined;
+      detailParts.push(t('Sub', '订阅') + ': <span class="cmp-price-edit' + (isEdited ? ' edited' : '') + '" onclick="editCmpPrice(this,event)" data-key="' + r.key + '" style="cursor:pointer;color:' + (isEdited ? 'var(--accent);font-weight:600' : 'inherit') + '">' + fmt(r.subPrice) + '/mo ✎</span>');
       if (r.overage > 0) detailParts.push(t('Overage', '超额') + ': ' + fmt(r.overage));
     } else {
       detailParts.push(t('API cost', 'API成本') + ': ' + fmt(r.apiCost));
@@ -326,10 +328,11 @@ function renderSubs() {
       var customPrice = savedPrices[s.name];
       var displayPrice = customPrice !== undefined ? customPrice : s.price;
       var isCustom = customSubs.indexOf(s) >= 0;
-      html += '<div class="sub-item ' + (isChecked ? 'checked' : '') + '" data-price="' + displayPrice + '" data-name="' + s.name + '" onclick="toggleSub(this)">';
-      html += '<div class="left"><div class="cb"></div>';
-      html += '<div class="name">' + s.name + (isCustom ? ' <span class="custom-tag">custom</span>' : '') + '</div></div>';
-      html += '<div class="price" ondblclick="editPrice(this,event)">' + fmt(displayPrice) + '/mo</div></div>';
+            var isEdited = customPrice !== undefined;
+            html += '<div class="sub-item ' + (isChecked ? 'checked' : '') + '" data-price="' + displayPrice + '" data-name="' + s.name + '" onclick="toggleSub(this)">';
+            html += '<div class="left"><div class="cb"></div>';
+            html += '<div class="name">' + s.name + (isCustom ? ' <span class="custom-tag">custom</span>' : '') + '</div></div>';
+            html += '<div class="price' + (isEdited ? ' edited' : '') + '" onclick="editPrice(this,event)">' + fmt(displayPrice) + '/mo<span class="edit-icon">✎</span></div></div>';
     });
   });
   if (html === '') html = '<div style="text-align:center;color:var(--text-dim);padding:20px">' + t('No results', '无结果') + '</div>';
@@ -377,6 +380,31 @@ function editPrice(el, e) {
       localStorage.setItem('aic_prices', JSON.stringify(savedPrices));
     }
     renderSubs(); recalcSubs();
+  };
+  input.addEventListener('blur', commit);
+  input.addEventListener('keydown', function(ev) { if (ev.key === 'Enter') commit(); });
+}
+
+function editCmpPrice(el, e) {
+  e.stopPropagation();
+  var key = el.dataset.key;
+  var oldPrice = parseFloat(el.textContent.replace(/[^0-9.]/g, '')) || 0;
+  var input = document.createElement('input');
+  input.type = 'number';
+  input.value = oldPrice;
+  input.step = '0.5';
+  input.style.cssText = 'width:55px;background:var(--bg);border:1px solid var(--accent);color:var(--text);border-radius:4px;padding:1px 3px;font-size:.75rem;text-align:right;display:inline';
+  el.replaceWith(input);
+  input.focus(); input.select();
+  var done = false;
+  var commit = function() {
+    if (done) return; done = true;
+    var newPrice = parseFloat(input.value);
+    if (!isNaN(newPrice) && newPrice >= 0) {
+      savedCmpPrices[key] = newPrice;
+      localStorage.setItem('aic_cmp_prices', JSON.stringify(savedCmpPrices));
+    }
+    calcCompare();
   };
   input.addEventListener('blur', commit);
   input.addEventListener('keydown', function(ev) { if (ev.key === 'Enter') commit(); });
