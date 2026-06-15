@@ -299,7 +299,14 @@ input[type="range"]::-moz-range-thumb {
   margin: 1px auto 0;
 }
 .sub-item .name { font-size: .88rem; }
-.sub-item .price { font-size: .82rem; color: var(--text-dim); white-space: nowrap; }
+.sub-item .price { font-size: .82rem; color: var(--text-dim); white-space: nowrap; cursor: pointer; padding: 1px 3px; border-radius: 3px; transition: background .15s; }
+.sub-item .price:hover { background: var(--accent-dim); color: var(--text); }
+.sub-item .price .edit-icon { font-size: .65rem; opacity: 0; margin-left: 2px; }
+.sub-item .price:hover .edit-icon { opacity: .6; }
+.cmp-price-edit { border-bottom: 1px dashed transparent; transition: border-color .15s; }
+.cmp-price-edit:hover { border-bottom-color: var(--accent); }
+.cmp-price-edit .edit-icon { font-size: .65rem; opacity: .4; }
+.sub-item .price.edited { color: var(--accent); font-weight: 600; }
 .custom-tag { font-size: .65rem; background: var(--border); color: var(--text-dim); padding: 1px 5px; border-radius: 4px; }
 
 /* ===== CUSTOM SUB FORM ===== */
