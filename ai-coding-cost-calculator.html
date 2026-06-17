@@ -4,28 +4,29 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>AI Cost Calculator - How Much Are You Spending on AI Tools?</title>
-<meta name="description" content="Audit your AI subscriptions, compare coding assistant costs, and find the cheapest plan. Track spending across ChatGPT, Claude, Cursor, Copilot, Midjourney and 50+ tools.">
+<meta name="description" content="How much are you spending on AI tools? Audit your subscriptions and compare real-time API pricing across 300+ models from OpenRouter.">
+<meta name="theme-color" content="#0d1117">
 
 <!-- Open Graph -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://aicosts.bmaster.cn/">
 <meta property="og:title" content="AI Cost Calculator - How Much Are You Spending on AI?">
-<meta property="og:description" content="Audit your AI subscriptions, compare coding tools, find the cheapest plan. Track 50+ AI tools including ChatGPT, Claude, Cursor, Copilot.">
+<meta property="og:description" content="Audit your AI subscriptions and compare real-time API pricing across 300+ models.">
 <meta property="og:image" content="https://aicosts.bmaster.cn/og-image.png">
 
 <!-- Twitter Card -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="AI Cost Calculator - How Much Are You Spending on AI?">
-<meta name="twitter:description" content="Audit your AI subscriptions, compare coding tools, find the cheapest plan.">
+<meta name="twitter:description" content="Audit your AI subscriptions and compare real-time API pricing across 300+ models.">
 <meta name="twitter:image" content="https://aicosts.bmaster.cn/og-image.png">
 
-<link rel="canonical" href="https://aicosts.bmaster.cn/ai-coding-cost-calculator.html">
+<link rel="canonical" href="https://aicosts.bmaster.cn/">
 <link rel="icon" type="image/svg+xml" href="favicon.svg">
 <link rel="stylesheet" href="style.css">
 
 <!-- Schema.org -->
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"WebApplication","name":"AI Cost Calculator","url":"https://aicosts.bmaster.cn","description":"Calculate and compare your AI tool spending. Audit subscriptions, compare coding assistants, find break-even points.","applicationCategory":"FinanceApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"aggregateRating":{"@type":"AggregateRating","ratingValue":"4.8","ratingCount":"120"}}
+{"@context":"https://schema.org","@type":"WebApplication","name":"AI Cost Calculator","url":"https://aicosts.bmaster.cn","description":"Audit your AI subscriptions and compare real-time API pricing across 300+ models.","applicationCategory":"FinanceApplication","operatingSystem":"Web","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}
 </script>
 </head>
 <body>
@@ -33,8 +34,8 @@
 <!-- HEADER -->
 <div class="header">
   <h1 data-en="AI Cost Calculator" data-zh="AI 成本计算器">AI Cost Calculator</h1>
-  <p data-en="How much are you actually spending on AI tools? Audit your subscriptions, compare coding assistants, and find your cheapest plan."
-     data-zh="你到底在 AI 工具上花了多少钱？盘点订阅、对比编程助手、找到最省钱的方案。">How much are you actually spending on AI tools? Audit your subscriptions, compare coding assistants, and find your cheapest plan.</p>
+  <p data-en="How much are you actually spending on AI tools? Audit your subscriptions and compare real-time API pricing across 300+ models."
+     data-zh="你到底在 AI 工具上花了多少钱？盘点订阅，对比 300+ 模型的实时 API 定价。">How much are you actually spending on AI tools? Audit your subscriptions and compare real-time API pricing across 300+ models.</p>
   <div class="lang-switch">
     <button class="lang-btn active" id="langEn" onclick="switchLang('en')">EN</button>
     <button class="lang-btn" id="langZh" onclick="switchLang('zh')">中文</button>
@@ -43,9 +44,8 @@
 
 <!-- TABS -->
 <div class="tabs">
-  <button class="tab active" data-tab="stack" onclick="switchTab('stack')" data-en="Subscription Audit" data-zh="订阅盘点">Subscription Audit</button>
-  <button class="tab" data-tab="compare" onclick="switchTab('compare')" data-en="Tool Comparison" data-zh="工具对比">Tool Comparison</button>
-  <button class="tab" data-tab="breakEven" onclick="switchTab('breakEven')" data-en="Sub vs API" data-zh="订阅 vs API">Sub vs API</button>
+  <button class="tab active" data-tab="stack" onclick="switchTab('stack')" data-en="My Subscriptions" data-zh="我的订阅">My Subscriptions</button>
+  <button class="tab" data-tab="models" onclick="switchTab('models')" data-en="Model Prices" data-zh="模型比价">Model Prices</button>
 </div>
 
 <!-- AD SLOT -->
@@ -53,47 +53,10 @@
   <!-- <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-2831974253933443" data-ad-slot="XXXXXXXXX" data-ad-format="auto" data-full-width-responsive="true"></ins> -->
 </div>
 
-<!-- ===== PANE: COMPARISON ===== -->
-<div class="pane" id="tab-compare">
-  <div class="section-title" data-en="Compare AI Coding Tool Costs" data-zh="AI 编程工具成本对比">Compare AI Coding Tool Costs</div>
-  <div class="section-desc" data-en="Enter your usage to see which AI coding tool is cheapest for you. Click any price to adjust it to what you actually pay." data-zh="输入你的使用量，看看哪个 AI 编程工具对你最便宜。点击价格可改成你实际付的金额。">Enter your usage to see which AI coding tool is cheapest for you. Click any price to adjust it to what you actually pay.</div>
-
-  <div class="controls">
-    <div class="control-group">
-      <label data-en="Daily coding hours" data-zh="每天编程小时数">Daily coding hours</label>
-      <input type="number" id="cmpHours" value="4" min="0.5" max="16" step="0.5">
-    </div>
-    <div class="control-group">
-      <label data-en="Work days per month" data-zh="每月工作天数">Work days per month</label>
-      <input type="number" id="cmpDays" value="20" min="1" max="31">
-    </div>
-    <div class="control-group">
-      <label data-en="Complexity" data-zh="复杂度">Complexity</label>
-      <select id="cmpComplexity">
-        <option value="light" data-en="Light (autocomplete, Q&A)" data-zh="轻度（自动补全、问答）">Light (autocomplete, Q&A)</option>
-        <option value="medium" selected data-en="Medium (feature dev, debugging)" data-zh="中度（功能开发、调试）">Medium (feature dev, debugging)</option>
-        <option value="heavy" data-en="Heavy (refactors, agentic)" data-zh="重度（重构、Agent）">Heavy (refactors, agentic)</option>
-      </select>
-    </div>
-    <div class="control-group">
-      <label data-en="Team size" data-zh="团队人数">Team size</label>
-      <div class="slider-row">
-        <input type="range" id="cmpTeam" min="1" max="50" value="1">
-        <span class="slider-val" id="cmpTeamVal">1</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="section-title" style="font-size:1rem;" data-en="Monthly Cost Comparison" data-zh="每月成本对比">Monthly Cost Comparison</div>
-  <div class="compare-grid" id="compareGrid"></div>
-  <div class="chart" id="compareChart"></div>
-  <div class="summary" id="compareSummary"></div>
-</div>
-
 <!-- ===== PANE: SUBSCRIPTION STACK ===== -->
 <div class="pane active" id="tab-stack">
   <div class="section-title" data-en="AI Subscription Stack Calculator" data-zh="AI 订阅堆叠计算器">AI Subscription Stack Calculator</div>
-  data-en="Check every AI tool you subscribe to. Prices are approximate — click any price to adjust it." data-zh="勾选你订阅的所有 AI 工具。价格为参考值，点击价格可修改。" tabindex="0">Check every AI tool you subscribe to. Prices are approximate — click any price to adjust it.</div>
+  <div class="section-desc" data-en="Check every AI tool you subscribe to. Prices are approximate — click any price to adjust it." data-zh="勾选你订阅的所有 AI 工具。价格为参考值，点击价格可修改。" tabindex="0">Check every AI tool you subscribe to. Prices are approximate — click any price to adjust it.</div>
 
   <div class="controls">
     <div class="control-group">
@@ -134,54 +97,41 @@
   </div>
 </div>
 
-<!-- ===== PANE: BREAK-EVEN ===== -->
-<div class="pane" id="tab-breakEven">
-  <div class="section-title" data-en="Subscription vs API: Which Is Cheaper?" data-zh="订阅 vs API：哪个更便宜？">Subscription vs API: Which Is Cheaper?</div>
-  <div class="section-desc" data-en="Claude Code subscription vs paying for API per token. Find your break-even point." data-zh="Claude Code 订阅 vs 按 token 付费。找到盈亏平衡点。">Claude Code subscription vs paying for API per token. Find your break-even point.</div>
+<!-- ===== PANE: MODEL PRICES (OpenRouter) ===== -->
+<div class="pane" id="tab-models">
+  <div class="section-title" data-en="AI Model Price Comparison" data-zh="AI 模型价格对比">AI Model Price Comparison</div>
+  <div class="section-desc" data-en="Real-time pricing from OpenRouter for 300+ models. Enter your usage to estimate monthly costs and find the best value." data-zh="来自 OpenRouter 的 300+ 模型实时定价。输入使用量估算月成本，找到性价比最高的模型。" tabindex="0">Real-time pricing from OpenRouter for 300+ models. Enter your usage to estimate monthly costs and find the best value.</div>
 
   <div class="controls">
     <div class="control-group">
-      <label data-en="Coding sessions / month" data-zh="每月编程会话数">Coding sessions / month</label>
-      <input type="number" id="beSessions" value="30" min="1">
+      <label data-en="Prompts per day" data-zh="每天提示数">Prompts per day</label>
+      <input type="number" id="mpPrompts" value="50" min="1" max="1000">
     </div>
     <div class="control-group">
-      <label data-en="Avg input tokens / session" data-zh="每次会话输入 token">Avg input tokens / session</label>
-      <input type="number" id="beInputTokens" value="50000" min="0" step="1000">
+      <label data-en="Avg input tokens" data-zh="平均输入 token">Avg input tokens</label>
+      <input type="number" id="mpInput" value="2000" min="100" step="100">
     </div>
     <div class="control-group">
-      <label data-en="Avg output tokens / session" data-zh="每次会话输出 token">Avg output tokens / session</label>
-      <input type="number" id="beOutputTokens" value="10000" min="0" step="1000">
+      <label data-en="Avg output tokens" data-zh="平均输出 token">Avg output tokens</label>
+      <input type="number" id="mpOutput" value="500" min="10" step="10">
     </div>
     <div class="control-group">
-      <label data-en="Model" data-zh="模型">Model</label>
-      <select id="beModel">
-        <option value="claude_sonnet">Claude Sonnet 4</option>
-        <option value="claude_haiku">Claude Haiku 3.5</option>
-        <option value="gpt4o">GPT-4o</option>
-        <option value="gpt4o_mini">GPT-4o mini</option>
-        <option value="deepseek">DeepSeek V4</option>
-        <option value="glm">GLM-4.6</option>
-        <option value="qwen">Qwen Max</option>
-        <option value="kimi">Moonshot (Kimi)</option>
-      </select>
-    </div>
-    <div class="control-group">
-      <label data-en="Cache read tokens (0.1x)" data-zh="缓存读取 token (0.1x)">Cache read tokens (0.1x)</label>
-      <input type="number" id="beCache" value="0" min="0" step="1000">
+      <label data-en="Days / month" data-zh="每月天数">Days / month</label>
+      <input type="number" id="mpDays" value="22" min="1" max="31">
     </div>
   </div>
 
-  <div class="summary">
-    <div style="font-size:.85rem;color:var(--text-dim);margin-bottom:.3rem" data-en="Estimated API Cost" data-zh="预计 API 成本">Estimated API Cost</div>
-    <div style="font-size:1.8rem;font-weight:800;"><span id="beApiCost">$0</span><span style="font-size:.8rem;color:var(--text-dim)"> / month</span></div>
-    <div style="font-size:.82rem;color:var(--text-dim);margin-top:.2rem"><span id="beApiTokens">0M</span> tokens/month</div>
+  <div class="controls" style="flex-wrap:wrap;gap:.5rem;">
+    <button class="btn btn-outline mp-filter active" data-tier="all" onclick="mpFilterTier('all')" data-en="All Models" data-zh="全部模型">All Models</button>
+    <button class="btn btn-outline mp-filter" data-tier="flagship" onclick="mpFilterTier('flagship')" data-en="Flagship" data-zh="旗舰">Flagship</button>
+    <button class="btn btn-outline mp-filter" data-tier="mid" onclick="mpFilterTier('mid')" data-en="Mid-Tier" data-zh="中端">Mid-Tier</button>
+    <button class="btn btn-outline mp-filter" data-tier="budget" onclick="mpFilterTier('budget')" data-en="Budget" data-zh="经济">Budget</button>
+    <input type="text" class="search-input" id="mpSearch" placeholder="Search models..." data-en-ph="Search models..." data-zh-ph="搜索模型..." style="flex:1;min-width:150px;">
   </div>
 
-  <div class="msg-box" id="beRecommendation"></div>
-
-  <div class="section-title" style="font-size:1rem;margin-top:1.5rem;" data-en="Cost Comparison Chart" data-zh="成本对比图表">Cost Comparison Chart</div>
-  <div class="chart" id="beChart"></div>
-  <div class="msg-box" id="beSavings"></div>
+  <div class="summary" id="mpSummary"></div>
+  <div class="model-table-wrap"><table class="model-table" id="mpTable"></table></div>
+  <div id="mpFooter" style="text-align:center;padding:.8rem;color:var(--text-dim);font-size:.78rem;"></div>
 </div>
 
 <!-- FOOTER -->
@@ -191,6 +141,6 @@
   <p style="margin-top:.5rem">&copy; 2026 <a href="https://bmaster.cn" style="color:var(--blue)">bmaster.cn</a> | <a href="/" style="color:var(--text-dim)">Home</a></p>
 </div>
 
-<script src="app.js?v=10"></script>
+<script src="app.js?v=12"></script>
 </body>
 </html>
