@@ -438,3 +438,62 @@ input[type="range"]::-moz-range-thumb {
   .total-card .big-number { font-size: 2rem; }
   .total-card .sub-stats { gap: 1rem; }
 }
+
+/* ===== MODEL PRICE TABLE ===== */
+.mp-filter.active { background:var(--blue); color:#fff; border-color:var(--blue); }
+
+.model-table-wrap {
+  overflow-x:auto;
+  margin-top:.5rem;
+  border-radius:10px;
+  border:1px solid var(--border);
+}
+
+.model-table {
+  width:100%;
+  border-collapse:collapse;
+  font-size:.82rem;
+}
+
+.model-table th {
+  background:var(--bg);
+  padding:.6rem .8rem;
+  text-align:left;
+  font-weight:600;
+  color:var(--text-dim);
+  border-bottom:1px solid var(--border);
+  white-space:nowrap;
+  cursor:pointer;
+  user-select:none;
+  position:sticky;
+  top:0;
+}
+
+.model-table th:hover { color:var(--blue); }
+.model-table th .sort-arrow { font-size:.7rem; opacity:.6; }
+
+.model-table td {
+  padding:.5rem .8rem;
+  border-bottom:1px solid var(--border);
+  white-space:nowrap;
+}
+
+.model-table tbody tr:hover { background:rgba(88,166,255,.06); }
+
+.model-table .mp-name { font-weight:600; color:var(--text); }
+.model-table .mp-provider { color:var(--text-dim); font-size:.75rem; }
+.model-table .mp-price { font-variant-numeric:tabular-nums; color:var(--text); }
+.model-table .mp-cost { font-weight:700; font-variant-numeric:tabular-nums; }
+.model-table .mp-cheapest { color:#3fb950; }
+.model-table .mp-cheap { color:#58a6ff; }
+.model-table .mp-mid { color:var(--text); }
+.model-table .mp-expensive { color:#f85149; }
+
+.mp-provider-tag {
+  display:inline-block;
+  font-size:.68rem;
+  padding:.1rem .4rem;
+  border-radius:4px;
+  background:rgba(88,166,255,.1);
+  color:var(--blue);
+}
