@@ -96,7 +96,6 @@ const API_PRICING = {
 let currentLang = localStorage.getItem('aic_lang') || 'en';
 let savedSubs = JSON.parse(localStorage.getItem('aic_subs') || '[]');
 let savedPrices = JSON.parse(localStorage.getItem('aic_prices') || '{}');
-let savedCmpPrices = JSON.parse(localStorage.getItem('aic_cmp_prices') || '{}');
 let customSubs = JSON.parse(localStorage.getItem('aic_custom') || '[]');
 
 function t(en, zh) { return currentLang === 'zh' ? zh : en; }
@@ -104,13 +103,12 @@ function fmt(n) { return currentLang === 'zh' ? ('\u00a5' + (n * 7.2).toFixed(0)
 function fmtP(n) { return currentLang === 'zh' ? ('\u00a5' + (n * 7.2).toFixed(2)) : ('$' + n.toFixed(2)); }
 
 // ===== HASH ROUTER =====
-// Routes: #/audit  #/compare  #/api  #/zh/audit  #/zh/compare  #/zh/api
+// Routes: #/audit  #/models  #/zh/audit  #/zh/models
 const ROUTE_MAP = {
   'audit': 'stack',
-  'compare': 'compare',
-  'api': 'breakEven',
+  'models': 'models',
 };
-const ROUTE_NAMES = { 'stack': 'audit', 'compare': 'compare', 'breakEven': 'api' };
+const ROUTE_NAMES = { 'stack': 'audit', 'models': 'models' };
 
 function parseHash() {
   var hash = location.hash.replace(/^#\/?/, '');
@@ -163,8 +161,7 @@ function switchLang(lang) {
   if (btn) btn.classList.add('active');
   applyStaticI18n();
   renderSubs();
-  calcCompare();
-  calcBreakEven();
+  if (document.querySelector('.tab[data-tab="models"]')) mpRender();
   updateHash(lang, getActiveTab(), true);
 }
 
@@ -190,120 +187,13 @@ function switchTabSilent(tabId) {
   var pane = document.getElementById('tab-' + tabId);
   if (btn) btn.classList.add('active');
   if (pane) pane.classList.add('active');
-  if (tabId === 'compare') calcCompare();
   if (tabId === 'stack') renderSubs();
-  if (tabId === 'breakEven') calcBreakEven();
+  if (tabId === 'models') mpInit();
 }
 
 function switchTab(tabId) {
   switchTabSilent(tabId);
   updateHash(currentLang, tabId, true);
-}
-
-// ===== TAB 1: COMPARISON =====
-function calcCompare() {
-  const hours = parseFloat(document.getElementById('cmpHours') ? document.getElementById('cmpHours').value : 4);
-  const complexity = document.getElementById('cmpComplexity') ? document.getElementById('cmpComplexity').value : 'medium';
-  const workDays = parseFloat(document.getElementById('cmpDays') ? document.getElementById('cmpDays').value : 20);
-  const teamSize = parseInt(document.getElementById('cmpTeam') ? document.getElementById('cmpTeam').value : 1);
-
-  const cdata = {
-    light:  { tph: 8000,  inR: 0.6,  outR: 0.4 },
-    medium: { tph: 25000, inR: 0.75, outR: 0.25 },
-    heavy:  { tph: 80000, inR: 0.85, outR: 0.15 },
-  };
-  const cd = cdata[complexity];
-  const totalTokens = cd.tph * hours * workDays;
-  const inputTokens = totalTokens * cd.inR;
-  const outputTokens = totalTokens * cd.outR;
-
-  const toolDefs = [
-      { key: 'claudeCode', plan: 'Max 5x', subPrice: 100, model: 'claude_sonnet', quota: Infinity,
-        dEn: 'Agentic coding, full Claude power', dZh: 'Agent编程，Claude全力' },
-      { key: 'cursor', plan: 'Pro', subPrice: 20, model: 'claude_sonnet', quota: 500000,
-        dEn: 'IDE with AI, fast autocomplete', dZh: 'AI IDE，快速补全' },
-      { key: 'copilot', plan: 'Individual', subPrice: 10, model: 'gpt4o_mini', quota: 300000,
-        dEn: 'Inline completion + chat', dZh: '行内补全 + 对话' },
-      { key: 'windsurf', plan: 'Pro', subPrice: 15, model: 'claude_sonnet', quota: 400000,
-        dEn: 'Cascade agent, multi-file edits', dZh: 'Cascade Agent，多文件编辑' },
-      { key: 'codex', plan: 'Plus', subPrice: 20, model: 'gpt5', quota: 600000,
-        dEn: 'Cloud coding agent by OpenAI', dZh: 'OpenAI 云端编程 Agent' },
-      { key: 'cline', plan: 'BYOK', subPrice: 0, model: 'claude_sonnet', quota: 0,
-        dEn: 'Open-source, you pay API directly', dZh: '开源，API 按量付费' },
-      { key: 'supermaven', plan: 'Pro', subPrice: 10, model: 'gpt4o_mini', quota: 250000,
-        dEn: 'Ultra-fast autocomplete', dZh: '超快自动补全' },
-    ].map(function(d) { d.subPrice = savedCmpPrices[d.key] !== undefined ? savedCmpPrices[d.key] : d.subPrice; return d; });
-
-  const results = toolDefs.map(r => {
-    const api = API_PRICING[r.model];
-    const fullApiCost = (inputTokens / 1e6 * api.in) + (outputTokens / 1e6 * api.out);
-    let totalCost, overage = 0;
-    if (r.subPrice === 0) {
-      totalCost = fullApiCost;
-    } else if (totalTokens <= r.quota) {
-      totalCost = r.subPrice;
-    } else {
-      const over = totalTokens - r.quota;
-      overage = (over * cd.inR / 1e6 * api.in) + (over * cd.outR / 1e6 * api.out);
-      totalCost = r.subPrice + overage;
-    }
-    return { ...r, apiCost: fullApiCost, overage, perPerson: totalCost, effectiveMonthly: totalCost * teamSize };
-  });
-
-  results.sort((a, b) => a.effectiveMonthly - b.effectiveMonthly);
-  const minCost = results[0].effectiveMonthly;
-  const maxCost = results[results.length - 1].effectiveMonthly;
-
-  const grid = document.getElementById('compareGrid');
-  if (!grid) return;
-  grid.innerHTML = results.map(r => {
-    const isBest = r.effectiveMonthly === minCost;
-    const isWorst = r.effectiveMonthly === maxCost && maxCost > minCost * 1.5;
-    const tool = TOOLS[r.key] || { icon: '?', name: r.key };
-    const desc = t(r.dEn, r.dZh);
-    let detailParts = [];
-    if (r.subPrice > 0) {
-      var isEdited = savedCmpPrices[r.key] !== undefined;
-      detailParts.push(t('Sub', '订阅') + ': <span class="cmp-price-edit' + (isEdited ? ' edited' : '') + '" onclick="editCmpPrice(this,event)" data-key="' + r.key + '" style="cursor:pointer;color:' + (isEdited ? 'var(--accent);font-weight:600' : 'inherit') + '">' + fmt(r.subPrice) + '/mo ✎</span>');
-      if (r.overage > 0) detailParts.push(t('Overage', '超额') + ': ' + fmt(r.overage));
-    } else {
-      detailParts.push(t('API cost', 'API成本') + ': ' + fmt(r.apiCost));
-    }
-    if (teamSize > 1) detailParts.push(fmt(r.perPerson) + t('/person', '/人'));
-    return '<div class="compare-card ' + (isBest ? 'best' : '') + '">' +
-      (isBest ? '<div class="badge best">' + t('Cheapest', '最便宜') + '</div>' : '') +
-      (isWorst ? '<div class="badge worst">' + t('Costliest', '最贵') + '</div>' : '') +
-      '<div class="b-badge-icon">' + tool.icon + '</div>' +
-      '<div class="b-name">' + tool.name + '</div>' +
-      '<div class="b-price">' + fmt(r.effectiveMonthly) + '<span style="font-size:.7rem;color:var(--text-dim)">/mo</span></div>' +
-      '<div class="b-desc">' + desc + '</div>' +
-      '<div class="b-detail">' + detailParts.join('<br>') + '</div></div>';
-  }).join('');
-
-  const chart = document.getElementById('compareChart');
-  if (chart) {
-    chart.innerHTML = results.map(r => {
-      const pct = maxCost > 0 ? (r.effectiveMonthly / maxCost) * 100 : 0;
-      const color = r.effectiveMonthly === minCost ? 'var(--accent)' : r.effectiveMonthly === maxCost ? 'var(--red)' : 'var(--blue)';
-      return '<div class="bar-row"><div class="b-name">' + ((TOOLS[r.key]||{}).name||r.key) + '</div>' +
-        '<div class="b-track"><div class="b-fill" style="width:' + pct + '%;background:' + color + '">' + (r.effectiveMonthly > maxCost*0.15 ? fmt(r.effectiveMonthly) : '') + '</div></div>' +
-        '<div class="b-val">' + fmt(r.effectiveMonthly) + '</div></div>';
-    }).join('');
-  }
-
-  const summary = document.getElementById('compareSummary');
-  if (summary) {
-    const savings = maxCost - minCost;
-    const cheapestName = (TOOLS[results[0].key]||{}).name;
-    const expensiveName = (TOOLS[results[results.length-1].key]||{}).name;
-    const teamNote = teamSize > 1 ? ' (' + teamSize + t(' people', '人') + ')' : '';
-    if (currentLang === 'zh') {
-      const cm = {light:'轻度',medium:'中度',heavy:'重度'}[complexity];
-      summary.innerHTML = '基于 <strong>' + hours + ' 小时/天</strong> x ' + workDays + ' 天，<strong>' + cm + '</strong>复杂度(~' + (totalTokens/1e6).toFixed(1) + 'M tokens/月)' + teamNote + '：最便宜 <strong style="color:var(--accent)">' + cheapestName + '</strong>(' + fmt(minCost) + '/月)，最贵 <strong style="color:var(--red)">' + expensiveName + '</strong>(' + fmt(maxCost) + '/月)，月省 <strong style="color:var(--accent)">' + fmt(savings) + '</strong>(年省' + fmt(savings*12) + ')。';
-    } else {
-      summary.innerHTML = 'Based on <strong>' + hours + ' hrs/day</strong> x ' + workDays + ' days, <strong>' + complexity + '</strong> (~' + (totalTokens/1e6).toFixed(1) + 'M tokens/mo)' + teamNote + ': Cheapest <strong style="color:var(--accent)">' + cheapestName + '</strong> at ' + fmt(minCost) + '/mo. Most expensive <strong style="color:var(--red)">' + expensiveName + '</strong> at ' + fmt(maxCost) + '/mo. Save up to <strong style="color:var(--accent)">' + fmt(savings) + '/mo</strong> (' + fmt(savings*12) + '/yr).';
-    }
-  }
 }
 
 // ===== TAB 2: SUBSCRIPTION STACK =====
@@ -384,32 +274,6 @@ function editPrice(el, e) {
   input.addEventListener('blur', commit);
   input.addEventListener('keydown', function(ev) { if (ev.key === 'Enter') commit(); });
 }
-
-function editCmpPrice(el, e) {
-  e.stopPropagation();
-  var key = el.dataset.key;
-  var oldPrice = parseFloat(el.textContent.replace(/[^0-9.]/g, '')) || 0;
-  var input = document.createElement('input');
-  input.type = 'number';
-  input.value = oldPrice;
-  input.step = '0.5';
-  input.style.cssText = 'width:55px;background:var(--bg);border:1px solid var(--accent);color:var(--text);border-radius:4px;padding:1px 3px;font-size:.75rem;text-align:right;display:inline';
-  el.replaceWith(input);
-  input.focus(); input.select();
-  var done = false;
-  var commit = function() {
-    if (done) return; done = true;
-    var newPrice = parseFloat(input.value);
-    if (!isNaN(newPrice) && newPrice >= 0) {
-      savedCmpPrices[key] = newPrice;
-      localStorage.setItem('aic_cmp_prices', JSON.stringify(savedCmpPrices));
-    }
-    calcCompare();
-  };
-  input.addEventListener('blur', commit);
-  input.addEventListener('keydown', function(ev) { if (ev.key === 'Enter') commit(); });
-}
-
 function addCustomSub() {
   var nameInput = document.getElementById('customSubName');
   var priceInput = document.getElementById('customSubPrice');
@@ -479,135 +343,235 @@ function recalcSubs() {
   }
 }
 
-// ===== TAB 3: BREAK-EVEN =====
-function calcBreakEven() {
-  var sessions = parseFloat(document.getElementById('beSessions') ? document.getElementById('beSessions').value : 30);
-  var avgInput = parseFloat(document.getElementById('beInputTokens') ? document.getElementById('beInputTokens').value : 50000);
-  var avgOutput = parseFloat(document.getElementById('beOutputTokens') ? document.getElementById('beOutputTokens').value : 10000);
-  var avgCache = parseFloat(document.getElementById('beCache') ? document.getElementById('beCache').value : 0);
-  var model = document.getElementById('beModel') ? document.getElementById('beModel').value : 'claude_sonnet';
+var mpData = null, mpSortKey = 'cost', mpSortDir = 1, mpTier = 'all';
 
-  var api = API_PRICING[model];
-  var inputCost = sessions * avgInput / 1e6 * api.in;
-  var outputCost = sessions * avgOutput / 1e6 * api.out;
-  var cacheCost = sessions * avgCache / 1e6 * api.in * 0.1;
-  var apiMonthly = inputCost + outputCost + cacheCost;
-  var monthlyTokens = sessions * (avgInput + avgOutput + avgCache);
-  var sub5x = 100, sub20x = 200;
-
-  var elApi = document.getElementById('beApiCost');
-  var elApiT = document.getElementById('beApiTokens');
-  var elRec = document.getElementById('beRecommendation');
-  var elChart = document.getElementById('beChart');
-  var elSav = document.getElementById('beSavings');
-
-  if (elApi) elApi.textContent = fmtP(apiMonthly);
-  if (elApiT) elApiT.textContent = (monthlyTokens / 1e6).toFixed(1) + 'M';
-
-  if (elRec) {
-    var rec = '';
-    if (apiMonthly < 20) {
-      rec = '<div class="tip"><strong>' + t('Use API.', '用 API。') + '</strong> ' + t(fmtP(apiMonthly) + '/mo - below any subscription.', fmtP(apiMonthly) + '/月 - 远低于任何订阅。') + '</div>';
-    } else if (apiMonthly < 60) {
-      rec = '<div class="tip"><strong>' + t('Use API.', '用 API。') + '</strong> ' + t(fmtP(apiMonthly) + '/mo, cheaper than Max 5x by ' + fmt(100 - apiMonthly) + '/mo.', fmtP(apiMonthly) + '/月，比 Max 5x 月省 ' + fmt(100 - apiMonthly) + '。') + '</div>';
-    } else if (apiMonthly < 100) {
-      rec = '<div class="warn"><strong>' + t("It's close.", '接近平衡。') + '</strong> ' + t(fmtP(apiMonthly) + '/mo approaching Max 5x ($100).', fmtP(apiMonthly) + '/月接近 Max 5x ($100)。') + '</div>';
-    } else if (apiMonthly < 200) {
-      rec = '<div class="warn"><strong>' + t('Subscribe Max 5x ($100).', '订阅 Max 5x ($100)。') + '</strong> ' + t('API would be ' + fmtP(apiMonthly) + ' - saves ' + fmt(apiMonthly - 100) + '/mo.', 'API需 ' + fmtP(apiMonthly) + ' - 月省 ' + fmt(apiMonthly - 100) + '。') + '</div>';
-    } else {
-      rec = '<div class="warn"><strong>' + t('Subscribe Max 20x ($200).', '订阅 Max 20x ($200)。') + '</strong> ' + t('API would be ' + fmtP(apiMonthly) + ' - saves ' + fmt(apiMonthly - 200) + '/mo.', 'API需 ' + fmtP(apiMonthly) + ' - 月省 ' + fmt(apiMonthly - 200) + '。') + '</div>';
-    }
-    elRec.innerHTML = rec;
+function mpInit() {
+  // Wire up event listeners (only once)
+  if (!document.getElementById('mpPrompts').dataset.bound) {
+    ['mpPrompts','mpInput','mpOutput','mpDays'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) { el.addEventListener('input', mpRender); el.dataset.bound = '1'; }
+    });
+    var search = document.getElementById('mpSearch');
+    if (search) { search.addEventListener('input', mpRender); search.dataset.bound = '1'; }
   }
-
-  if (elChart) {
-    var data = [
-      { name: 'API (' + api.name + ')', cost: apiMonthly, color: 'var(--blue)' },
-      { name: 'Claude Code Max 5x', cost: sub5x, color: apiMonthly > sub5x ? 'var(--accent)' : 'var(--text-dim)' },
-      { name: 'Claude Code Max 20x', cost: sub20x, color: apiMonthly > sub20x ? 'var(--accent)' : 'var(--text-dim)' },
-      { name: 'Cursor Pro', cost: 20, color: 'var(--text-dim)' },
-      { name: 'Copilot', cost: 10, color: 'var(--text-dim)' },
-    ];
-    var maxC = Math.max.apply(null, data.map(function(d) { return d.cost; }).concat([1]));
-    elChart.innerHTML = data.map(function(d) {
-      var pct = (d.cost / maxC) * 100;
-      return '<div class="bar-row"><div class="b-name">' + d.name + '</div>' +
-        '<div class="b-track"><div class="b-fill" style="width:' + pct + '%;background:' + d.color + '">' + (d.cost/maxC > 0.2 ? fmt(d.cost) : '') + '</div></div>' +
-        '<div class="b-val">' + fmt(d.cost) + '</div></div>';
-    }).join('');
-  }
-
-  if (elSav) {
-    var cheapest = Math.min(apiMonthly, sub5x, sub20x);
-    var mostExpensive = Math.max(apiMonthly, sub20x);
-    var savings = mostExpensive - cheapest;
-    elSav.innerHTML = t('Right plan saves up to <strong style="color:var(--accent)">' + fmt(savings) + '/mo</strong> (' + fmt(savings * 12) + '/yr).',
-      '选对方案月省 <strong style="color:var(--accent)">' + fmt(savings) + '</strong>(年省' + fmt(savings * 12) + ')。');
+  // Fetch data if not cached
+  if (mpData) {
+    mpRender();
+  } else {
+    mpFetchData();
   }
 }
 
-function toggleFAQ(el) { el.classList.toggle('open'); }
+function mpFetchData() {
+  var summary = document.getElementById('mpSummary');
+  var table = document.getElementById('mpTable');
+  if (summary) summary.innerHTML = '<span style="color:var(--text-dim)">' + t('Loading model data from OpenRouter...', '正在从 OpenRouter 加载模型数据...') + '</span>';
+  if (table) table.innerHTML = '';
 
-function exportResult() {
-  var checked = document.querySelectorAll('.sub-item.checked');
-  var monthlyPer = 0;
-  var items = [];
-  checked.forEach(function(el) {
-    var p = parseFloat(el.dataset.price);
-    monthlyPer += p;
-    items.push({ name: el.dataset.name, price: p });
-  });
-  var zh = currentLang === 'zh';
-  var text = (zh ? 'AI 订阅成本报告' : 'AI Subscription Cost Report') + '\\n================================\\n\\n';
-  text += (zh ? '月度: ' : 'Monthly: ') + fmt(monthlyPer) + '\\n';
-  text += (zh ? '年度: ' : 'Yearly: ') + fmt(monthlyPer * 12) + '\\n';
-  text += (zh ? '订阅数: ' : 'Subscriptions: ') + items.length + '\\n\\n';
-  text += (zh ? '明细:\\n' : 'Breakdown:\\n');
-  items.sort(function(a,b){return b.price-a.price;}).forEach(function(i) {
-    text += '  ' + i.name + ': ' + fmt(i.price) + '/mo\\n';
-  });
-  text += '\\n' + (zh ? '生成自 aicosts.bmaster.cn' : 'Generated from aicosts.bmaster.cn');
-  var blob = new Blob([text], { type: 'text/plain' });
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = zh ? 'AI成本报告.txt' : 'AI-cost-report.txt';
-  a.click();
+  fetch('https://openrouter.ai/api/v1/models')
+    .then(function(r) { return r.json(); })
+    .then(function(json) {
+      var models = (json.data || []).filter(function(m) {
+        var p = m.pricing || {};
+        var inp = parseFloat(p.prompt) || -1;
+        var out = parseFloat(p.completion) || -1;
+        return inp > 0 && out > 0;   // only paid text models
+      }).map(function(m) {
+        var p = m.pricing || {};
+        var inp = parseFloat(p.prompt) * 1e6;
+        var out = parseFloat(p.completion) * 1e6;
+        var ctx = m.context_length || 0;
+        var provider = (m.id || '').split('/')[0] || '';
+        var tier = mpClassifyTier(inp, out, provider, m.id || '');
+        return {
+          id: m.id,
+          name: m.name || m.id,
+          provider: provider,
+          inp: inp,
+          out: out,
+          ctx: ctx,
+          tier: tier,
+        };
+      });
+      mpData = models;
+      mpRender();
+    })
+    .catch(function(err) {
+      // Fallback: use hardcoded API_PRICING
+      mpData = Object.keys(API_PRICING).map(function(k) {
+        var m = API_PRICING[k];
+        var combined = m.in + m.out;
+        return {
+          id: k, name: m.name, provider: 'builtin',
+          inp: m.in, out: m.out, ctx: 200000,
+          tier: combined < 2 ? 'budget' : combined < 20 ? 'mid' : 'flagship',
+        };
+      });
+      if (summary) summary.innerHTML = '<span style="color:#f85149">' + t('Could not reach OpenRouter API. Showing cached data.', '无法连接 OpenRouter API，显示缓存数据。') + '</span>';
+      mpRender();
+    });
 }
 
-// ===== INIT =====
+function mpClassifyTier(inp, out, provider, id) {
+  var combined = inp + out;
+  var idLow = id.toLowerCase();
+  // Flagship: premium models
+  if (/opus|gpt-5(?!.*mini)(?!.*nano)|pro$|fable|grok-4|sonnet|gemini.*pro/.test(idLow)) {
+    if (combined > 5) return 'flagship';
+  }
+  if (combined > 15) return 'flagship';
+  // Budget: very cheap
+  if (combined < 1) return 'budget';
+  // Mid-tier: everything else
+  return 'mid';
+}
+
+function mpFilterTier(tier) {
+  mpTier = tier;
+  document.querySelectorAll('.mp-filter').forEach(function(b) { b.classList.remove('active'); });
+  var btn = document.querySelector('.mp-filter[data-tier="' + tier + '"]');
+  if (btn) btn.classList.add('active');
+  mpRender();
+}
+
+function mpGetUsage() {
+  var prompts = parseInt(document.getElementById('mpPrompts') ? document.getElementById('mpPrompts').value : 50);
+  var inpTok = parseInt(document.getElementById('mpInput') ? document.getElementById('mpInput').value : 2000);
+  var outTok = parseInt(document.getElementById('mpOutput') ? document.getElementById('mpOutput').value : 500);
+  var days = parseInt(document.getElementById('mpDays') ? document.getElementById('mpDays').value : 22);
+  return { prompts: prompts, inpTok: inpTok, outTok: outTok, days: days };
+}
+
+function mpRender() {
+  if (!mpData) return;
+  var u = mpGetUsage();
+  var search = (document.getElementById('mpSearch') ? document.getElementById('mpSearch').value : '').toLowerCase();
+  var isZh = currentLang === 'zh';
+
+  // Build list with cost calc
+  var list = mpData.filter(function(m) {
+    if (mpTier !== 'all' && m.tier !== mpTier) return false;
+    if (search && m.id.toLowerCase().indexOf(search) < 0 && m.name.toLowerCase().indexOf(search) < 0) return false;
+    return true;
+  }).map(function(m) {
+    var monthlyInTokens = u.prompts * u.inpTok * u.days;
+    var monthlyOutTokens = u.prompts * u.outTok * u.days;
+    var cost = (monthlyInTokens * m.inp + monthlyOutTokens * m.out) / 1e6;
+    return Object.assign({}, m, { cost: cost, totalTok: monthlyInTokens + monthlyOutTokens });
+  });
+
+  // Sort
+  list.sort(function(a, b) {
+    var va = a[mpSortKey], vb = b[mpSortKey];
+    if (typeof va === 'string') { va = va.toLowerCase(); vb = (vb||'').toLowerCase(); }
+    return (va < vb ? -1 : va > vb ? 1 : 0) * mpSortDir;
+  });
+
+  // Limit to top 40
+  var display = list.slice(0, 40);
+  var minCost = list.length ? list.reduce(function(min, m) { return Math.min(min, m.cost); }, Infinity) : 0;
+  var maxCost = list.length ? list.reduce(function(max, m) { return Math.max(max, m.cost); }, 0) : 0;
+
+  // Summary
+  var summary = document.getElementById('mpSummary');
+  if (summary) {
+    var cheapest = list.length ? list.reduce(function(c,m){ return m.cost < c.cost ? m : c; }, list[0]) : null;
+    var mostExp = list.length ? list.reduce(function(c,m){ return m.cost > c.cost ? m : c; }, list[0]) : null;
+    var cheapestName = cheapest ? cheapest.name.replace(/\s*\(.*\)/,'') : '-';
+    var expName = mostExp ? mostExp.name.replace(/\s*\(.*\)/,'') : '-';
+    var range = cheapest && mostExp && cheapest.cost > 0 ? Math.round(mostExp.cost / cheapest.cost) : 0;
+    summary.innerHTML =
+      '<div style="font-size:.85rem;color:var(--text-dim);margin-bottom:.3rem">' + t('Estimated Monthly Cost', '预计月成本') + '</div>' +
+      '<div style="display:flex;gap:1.5rem;flex-wrap:wrap;align-items:baseline;">' +
+        '<span style="font-size:.78rem;color:var(--text-dim)">' + t('Cheapest: ', '最便宜: ') + '<strong style="color:#3fb950">' + cheapestName + ' ' + fmtP(cheapest ? cheapest.cost : 0) + '</strong></span>' +
+        '<span style="font-size:.78rem;color:var(--text-dim)">' + t('Most expensive: ', '最贵: ') + '<strong style="color:#f85149">' + expName + ' ' + fmtP(mostExp ? mostExp.cost : 0) + '</strong></span>' +
+        (range > 1 ? '<span style="font-size:.78rem;color:var(--text-dim)">x' + range + t(' difference', ' 倍差距') + '</span>' : '') +
+      '</div>' +
+      '<div style="font-size:.72rem;color:var(--text-dim);margin-top:.3rem">' +
+        (u.prompts * u.days) + t(' prompts/mo, ', ' 次提示/月, ') +
+        ((u.prompts * (u.inpTok + u.outTok) * u.days) / 1e6).toFixed(1) + 'M tokens/mo' +
+      '</div>';
+  }
+
+  // Table
+  var table = document.getElementById('mpTable');
+  if (!table) return;
+
+  var cols = [
+    { key: 'name',   labelEn: 'Model',         labelZh: '模型',     cls: 'mp-name' },
+    { key: 'provider', labelEn: 'Provider',    labelZh: '提供商',  cls: 'mp-provider' },
+    { key: 'inp',    labelEn: 'Input $/1M',    labelZh: '输入 $/1M', cls: 'mp-price' },
+    { key: 'out',    labelEn: 'Output $/1M',   labelZh: '输出 $/1M', cls: 'mp-price' },
+    { key: 'ctx',    labelEn: 'Context',       labelZh: '上下文',   cls: 'mp-price' },
+    { key: 'cost',   labelEn: 'Est. Cost/mo',  labelZh: '预计月费',  cls: 'mp-cost' },
+  ];
+
+  var html = '<thead><tr>';
+  cols.forEach(function(c) {
+    var arrow = mpSortKey === c.key ? (mpSortDir > 0 ? ' \u25B2' : ' \u25BC') : '';
+    html += '<th onclick="mpSort(\'' + c.key + '\')">' + t(c.labelEn, c.labelZh) + '<span class="sort-arrow">' + arrow + '</span></th>';
+  });
+  html += '</tr></thead><tbody>';
+
+  display.forEach(function(m) {
+    var costClass = m.cost <= minCost * 1.5 ? 'mp-cheapest' :
+                    m.cost <= minCost * 5 ? 'mp-cheap' :
+                    m.cost >= maxCost * 0.5 ? 'mp-expensive' : 'mp-mid';
+    var ctxStr = m.ctx >= 1e6 ? (m.ctx / 1e6) + 'M' : m.ctx >= 1000 ? Math.round(m.ctx / 1000) + 'K' : '' + m.ctx;
+    var providerTag = '<span class="mp-provider-tag">' + m.provider + '</span>';
+    var costStr = isZh ? ('\u00a5' + (m.cost * 7.2).toFixed(2)) : ('$' + m.cost.toFixed(2));
+
+    html += '<tr>' +
+      '<td class="mp-name">' + m.name + '</td>' +
+      '<td class="mp-provider">' + providerTag + '</td>' +
+      '<td class="mp-price">$' + m.inp.toFixed(2) + '</td>' +
+      '<td class="mp-price">$' + m.out.toFixed(2) + '</td>' +
+      '<td class="mp-price">' + ctxStr + '</td>' +
+      '<td class="mp-cost ' + costClass + '">' + costStr + '</td>' +
+    '</tr>';
+  });
+  html += '</tbody>';
+  table.innerHTML = html;
+
+  // Footer
+  var footer = document.getElementById('mpFooter');
+  if (footer) {
+    footer.innerHTML = t(
+      'Showing ' + display.length + ' of ' + list.length + ' models. Data from OpenRouter API.',
+      '显示 ' + display.length + ' / ' + list.length + ' 个模型。数据来自 OpenRouter API。'
+    );
+  }
+}
+
+function mpSort(key) {
+  if (mpSortKey === key) {
+    mpSortDir *= -1;
+  } else {
+    mpSortKey = key;
+    mpSortDir = 1;
+  }
+  mpRender();
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   if (currentLang === 'zh') document.documentElement.lang = 'zh-CN';
   applyStaticI18n();
 
-  ['cmpHours', 'cmpComplexity', 'cmpDays', 'cmpTeam'].forEach(function(id) {
-    var el = document.getElementById(id);
-    if (el) el.addEventListener('input', calcCompare);
-  });
-  ['beSessions', 'beInputTokens', 'beOutputTokens', 'beCache', 'beModel'].forEach(function(id) {
-    var el = document.getElementById(id);
-    if (el) el.addEventListener('input', calcBreakEven);
-  });
   var st = document.getElementById('auditTeam');
   if (st) st.addEventListener('input', recalcSubs);
   var search = document.getElementById('subSearch');
   if (search) search.addEventListener('input', filterSubs);
 
-  // Slider value displays
-  var ct = document.getElementById('cmpTeam');
-  if (ct) {
-    var ctv = document.getElementById('cmpTeamVal');
-    if (ctv) ct.addEventListener('input', function() { ctv.textContent = ct.value; });
-  }
+  // Slider value display
   var at = document.getElementById('auditTeam');
   if (at) {
     var atv = document.getElementById('auditTeamVal');
     if (atv) at.addEventListener('input', function() { atv.textContent = at.value; });
   }
 
-  // Initial render of all data
+  // Initial render
   renderSubs();
-  calcCompare();
-  calcBreakEven();
 
   // First visit with no hash: redirect to saved language preference
   if (!location.hash) {
